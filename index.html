@@ -1,0 +1,645 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Uplift - Student Support Assistant</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --glass-bg: rgba(255, 255, 255, 0.25);
+      --glass-border: rgba(255, 255, 255, 0.18);
+      --text-primary: #2d3748;
+      --text-secondary: #4a5568;
+      --shadow-light: 0 8px 32px rgba(31, 38, 135, 0.37);
+      --shadow-dark: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .floating-elements {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .floating-circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      animation: float 20s infinite linear;
+    }
+
+    .floating-circle:nth-child(1) {
+      width: 80px;
+      height: 80px;
+      top: 20%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .floating-circle:nth-child(2) {
+      width: 120px;
+      height: 120px;
+      top: 60%;
+      right: 15%;
+      animation-delay: -5s;
+    }
+
+    .floating-circle:nth-child(3) {
+      width: 60px;
+      height: 60px;
+      bottom: 30%;
+      left: 20%;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(-20px) rotate(90deg); }
+      50% { transform: translateY(0px) rotate(180deg); }
+      75% { transform: translateY(20px) rotate(270deg); }
+    }
+
+    .chat-container {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      width: 100%;
+      max-width: 450px;
+      height: 85vh;
+      max-height: 700px;
+      border-radius: 24px;
+      box-shadow: var(--shadow-light);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      z-index: 10;
+      transform: translateY(0);
+      transition: all 0.3s ease;
+    }
+
+    .chat-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 60px rgba(31, 38, 135, 0.5);
+    }
+
+    .chat-header {
+      background: var(--primary-gradient);
+      padding: 24px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chat-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .chat-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 4px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chat-subtitle {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 400;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #4ade80;
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.1); }
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+    }
+
+    .message {
+      padding: 16px 20px;
+      border-radius: 20px;
+      max-width: 85%;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      position: relative;
+      animation: messageSlide 0.3s ease-out;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    @keyframes messageSlide {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .user-message {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 8px;
+      margin-left: auto;
+    }
+
+    .bot-message {
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text-primary);
+      align-self: flex-start;
+      border-bottom-left-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      border-bottom-left-radius: 8px;
+      max-width: 85%;
+      align-self: flex-start;
+      margin-top: 8px;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #94a3b8;
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .chat-input-container {
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-input {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 25px;
+      padding: 4px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .chat-input:focus-within {
+      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 16px 20px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .chat-input input::placeholder {
+      color: #94a3b8;
+    }
+
+    .send-button {
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .send-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .send-button:active {
+      transform: scale(0.95);
+    }
+
+    .send-button svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .send-button:hover svg {
+      transform: translateX(2px);
+    }
+
+    /* Enhanced Mobile Responsiveness */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      .chat-container {
+        height: 95vh;
+        max-height: none;
+        border-radius: 20px;
+      }
+      
+      .chat-header {
+        padding: 20px 16px;
+      }
+      
+      .chat-title {
+        font-size: 1.3rem;
+      }
+      
+      .chat-messages {
+        padding: 16px;
+        gap: 12px;
+      }
+      
+      .message {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        max-width: 90%;
+      }
+      
+      .chat-input-container {
+        padding: 16px;
+      }
+      
+      .floating-circle {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .chat-messages {
+        padding: 12px;
+      }
+      
+      .message {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        border-radius: 16px;
+      }
+      
+      .user-message {
+        border-bottom-right-radius: 6px;
+      }
+      
+      .bot-message {
+        border-bottom-left-radius: 6px;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .bot-message {
+        background: rgba(30, 30, 30, 0.9);
+        color: #e2e8f0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .chat-input {
+        background: rgba(30, 30, 30, 0.9);
+      }
+      
+      .chat-input input {
+        color: #e2e8f0;
+      }
+      
+      .chat-input input::placeholder {
+        color: #64748b;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Success animations */
+    @keyframes successPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .message-sent {
+      animation: successPulse 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-elements">
+    <div class="floating-circle"></div>
+    <div class="floating-circle"></div>
+    <div class="floating-circle"></div>
+  </div>
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="header-content">
+        <div class="chat-title">✨ Uplift</div>
+        <div class="chat-subtitle">Your Personal Student Support Assistant</div>
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span>Online & Ready to Help</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chat-messages" id="chat-messages">
+      <div class="bot-message message">
+        <strong>👋 Hello there!</strong><br>
+        I'm Uplift, your personal support companion. I'm here to listen, understand, and help you navigate whatever's on your mind. How are you feeling today?
+      </div>
+    </div>
+    
+    <div class="chat-input-container">
+      <form class="chat-input" id="chat-form">
+        <input 
+          type="text" 
+          id="user-input" 
+          placeholder="Share what's on your mind..." 
+          autocomplete="off" 
+          required 
+        />
+        <button type="submit" class="send-button" id="send-button">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('user-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const sendButton = document.getElementById('send-button');
+
+    const API_URL = "http://localhost:8000/chat";
+
+    const API_KEY = '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';
+
+    let chatHistory = [
+      {
+        role: "system",
+        content: "You are Uplift — a kind, emotionally intelligent, human-like friend who helps students feeling stressed, lost, or demotivated. Your job is to gently talk to them in short, calm, comforting replies — like a trusted friend would. DO NOT assume anything about what they're going through. Wait until they say it. DO NOT mention exams, sadness, stress, or failure unless the user says it first. Always start light, open, and warm. Ask soft, neutral questions first like 'How's your day going?' or 'What's been on your mind lately?' NEVER jump to comforting unless the user opens up. Speak softly, like texting a friend, one message at a time. No paragraphs. No bullet points. No listing. Just be real, caring, and fully present in the moment."
+      }
+    ];
+
+    let isTyping = false;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (isTyping) return;
+      
+      const message = input.value.trim();
+      if (!message) return;
+      
+      appendMessage('user', message);
+      chatHistory.push({ role: 'user', content: message });
+      input.value = '';
+      
+      // Show typing indicator
+      showTypingIndicator();
+      
+      try {
+       const res = await fetch(API_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'mistralai/mistral-7b-instruct',
+    messages: chatHistory,
+    temperature: 0.9,
+    max_tokens: 150
+  })
+});
+
+
+
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content || "⚠️ No reply. Please try again.";
+
+        
+        // Remove typing indicator
+        hideTypingIndicator();
+        
+        appendMessage('bot', reply);
+        chatHistory.push({ role: 'assistant', content: reply });
+      } catch (error) {
+        hideTypingIndicator();
+        appendMessage('bot', "I'm sorry, I'm having trouble connecting right now. Please try again in a moment. 💙");
+        console.error('Error:', error);
+      }
+    });
+
+    function appendMessage(sender, text) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message', 'message');
+      
+      if (sender === 'bot') {
+        msgDiv.innerHTML = formatBotMessage(text);
+      } else {
+        msgDiv.textContent = text;
+        msgDiv.classList.add('message-sent');
+      }
+      
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function formatBotMessage(text) {
+      // Add some basic formatting to make bot messages more engaging
+      return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                 .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    }
+
+    function showTypingIndicator() {
+      if (isTyping) return;
+      isTyping = true;
+      
+      const typingDiv = document.createElement('div');
+      typingDiv.classList.add('typing-indicator');
+      typingDiv.id = 'typing-indicator';
+      typingDiv.innerHTML = `
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+        <span style="margin-left: 12px; color: #64748b; font-size: 0.85rem;">Uplift is typing...</span>
+      `;
+      
+      chatMessages.appendChild(typingDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+      const typingIndicator = document.getElementById('typing-indicator');
+      if (typingIndicator) {
+        typingIndicator.remove();
+      }
+      isTyping = false;
+    }
+
+    // Add some interactive feedback
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        form.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    // Auto-resize input on mobile
+    function adjustInputHeight() {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    }
+
+    input.addEventListener('input', adjustInputHeight);
+
+    // Add focus management for better UX
+    input.addEventListener('focus', () => {
+      document.querySelector('.chat-input').style.transform = 'translateY(-2px)';
+    });
+
+    input.addEventListener('blur', () => {
+      document.querySelector('.chat-input').style.transform = 'translateY(0)';
+    });
+
+    // Prevent form submission when empty
+    input.addEventListener('input', () => {
+      sendButton.style.opacity = input.value.trim() ? '1' : '0.5';
+    });
+
+    // Initialize
+    sendButton.style.opacity = '0.5';
+  </script>
+</body>
+</html>
